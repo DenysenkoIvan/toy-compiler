@@ -13,8 +13,14 @@ public:
 
 private:
 
-	//void expect_token(TokenKind type);
-	bool match_token(TokenKind type);
+	bool match_token(TokenKind kind);
+	bool match_token(std::string_view str);
+	bool is_token(TokenKind kind);
+
+	void next_token();
+
+	std::string& get_token_lexeme();
+	Position get_token_position();
 
 	std::unique_ptr<TranslationUnit> parse_translation_unit();
 	
@@ -23,8 +29,10 @@ private:
 	std::unique_ptr<Expression> parse_expression_statement();
 	std::unique_ptr<DeclarationStatement> parse_declaration_statement();
 	std::unique_ptr<FunctionDeclaration> parse_function_declaration();
+	TypedId parse_typed_id();
+	std::vector<TypedId> parse_parameters();
+	Type parse_return_type();
 	std::unique_ptr<VariableDeclaration> parse_variable_declaration();
-	std::unique_ptr<Statement> parse_parameters();
 	std::unique_ptr<IfStatement> parse_if_statement();
 	std::unique_ptr<ForStatement> parse_for_statement();
 	std::unique_ptr<WhileStatement> parse_while_statement();

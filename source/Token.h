@@ -10,7 +10,13 @@ enum class TokenKind {
 	COMMENT,
 
 	NAME,
+	INT,
+	FLOAT,
 
+	COMA,
+	SEMICOLON,
+	ARROW,
+	
 	EQUAL,
 	EQUAL_EQUAL,
 	NOT_EQUAL,
@@ -20,8 +26,8 @@ enum class TokenKind {
 	LOGICAL_NOT,
 	
 	LESS,
-	GREATER,
 	LESS_EQUAL,
+	GREATER,
 	GREATER_EQUAL,
 	
 	PLUS_PLUS,
@@ -31,11 +37,11 @@ enum class TokenKind {
 	MINUS,
 	STAR,
 	SLASH,
-	COMA,
+
+	
 	
 	LEFT_PAREN,
 	RIGHT_PAREN,
-	SEMICOLON,
 	LEFT_BRACKET,
 	RIGHT_BRACKET
 };

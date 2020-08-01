@@ -6,15 +6,19 @@ static void error(Position pos, std::string_view message) {
 	std::cout << '[' << pos.line << ',' << pos.column << "] Error: " << message << '\n';
 }
 
+static Type parse_type(const std::string& type_str) {
+	if (type_str == "int")
+		return Type::INT;
+	else if (type_str == "float")
+		return Type::FLOAT;
+	else if (type_str == "bool")
+		return Type::BOOL;
+	else
+		return Type::VOID;
+}
+
 Parser::Parser(const std::filesystem::path& input_file)
 	: m_tokenizer(input_file) {}
-
-/*void Parser::expect_token(TokenKind kind) {
-	if (m_tokenizer.current().kind() == kind) {
-		m_tokenizer.next();
-	} else
-		error(m_tokenizer.current().pos(), "Expected ");
-}*/
 
 bool Parser::match_token(TokenKind kind) {
 	if (m_tokenizer.current().kind() == kind) {
@@ -22,6 +26,30 @@ bool Parser::match_token(TokenKind kind) {
 		return true;
 	} else
 		return false;
+}
+
+bool Parser::match_token(std::string_view str) {
+	if (m_tokenizer.current().kind() == TokenKind::NAME && m_tokenizer.current().lexeme() == str) {
+		m_tokenizer.next();
+		return true;
+	} else
+		return false;
+}
+
+bool Parser::is_token(TokenKind kind) {
+	return m_tokenizer.current().kind() == kind;
+}
+
+void Parser::next_token() {
+	m_tokenizer.next();
+}
+
+std::string& Parser::get_token_lexeme() {
+	return m_tokenizer.current().lexeme();
+}
+
+Position Parser::get_token_position() {
+	return m_tokenizer.current().pos();
 }
 
 std::unique_ptr<TranslationUnit> Parser::parse() {
@@ -74,7 +102,7 @@ std::unique_ptr<Statement> Parser::parse_statement() {
 
 	stmt = parse_return_statement();
 	if (stmt) return stmt;
-	
+
 	return nullptr;
 }
 
@@ -92,7 +120,7 @@ std::unique_ptr<CompoundStatement> Parser::parse_compound_statement() {
 
 			statements.push_back(parse_statement());
 		}
-	
+
 		return std::make_unique<CompoundStatement>(std::move(statements));
 	}
 
@@ -114,18 +142,120 @@ std::unique_ptr<Expression> Parser::parse_expression_statement() {
 }
 
 std::unique_ptr<DeclarationStatement> Parser::parse_declaration_statement() {
-	return nullptr;
+	std::unique_ptr<VariableDeclaration> var_decl = parse_variable_declaration();
+	if (var_decl) {
+		match_token(TokenKind::SEMICOLON);
+		return var_decl;
+	} else
+		return parse_function_declaration();
 }
 
 std::unique_ptr<FunctionDeclaration> Parser::parse_function_declaration() {
+	std::string id;
+	Type ret_type;
+	std::vector<TypedId> params;
+	std::unique_ptr<CompoundStatement> statement;
+
+	if (match_token("def")) {
+		if (is_token(TokenKind::NAME)) {
+			id = move(get_token_lexeme());
+			next_token();
+		} else
+			error(m_tokenizer.current().pos(), "Expected ID");
+
+		if (!match_token(TokenKind::LEFT_PAREN))
+			error(get_token_position(), "Expected '('");
+
+		params = parse_parameters();
+
+		if (!match_token(TokenKind::RIGHT_PAREN))
+			error(get_token_position(), "Expected ')'");
+
+		ret_type = parse_return_type();
+
+		statement = parse_compound_statement();
+		if (!statement)
+			error(get_token_position(), "Expected statements enclosed in '{', '}'");
+
+		return std::make_unique<FunctionDeclaration>(ret_type, std::move(id), std::move(params), std::move(statement));
+	}
+
 	return nullptr;
+}
+
+TypedId Parser::parse_typed_id() {
+	if (is_token(TokenKind::NAME)) {
+		TypedId typed_id;
+		typed_id.type = parse_type(get_token_lexeme());
+		next_token();
+
+		if (typed_id.type == Type::VOID)
+			return typed_id;
+
+		if (!is_token(TokenKind::NAME)) {
+			error(get_token_position(), "Expected ID");
+			return typed_id;
+		}
+
+		typed_id.id = std::move(get_token_lexeme());
+
+		next_token();
+
+		return typed_id;
+	}
+
+	return { Type::VOID };
+}
+
+std::vector<TypedId> Parser::parse_parameters() {
+	std::vector<TypedId> params;
+
+	TypedId typed_id = parse_typed_id();
+	if (typed_id.type == Type::VOID)
+		return params;
+
+	params.push_back(std::move(typed_id));
+
+	while (match_token(TokenKind::COMA)) {
+		TypedId typed_id = parse_typed_id();
+		if (typed_id.type == Type::VOID)
+			break;
+
+		params.push_back(std::move(typed_id));
+	}
+
+	return params;
+}
+
+Type Parser::parse_return_type() {
+	Type type;
+	
+	if (match_token(TokenKind::ARROW)) {
+		if (!is_token(TokenKind::NAME)) {
+			error(get_token_position(), "Expected return type, 'void' assumed");
+			return Type::VOID;
+		}
+
+		std::string_view ret_type = get_token_lexeme();
+		if (ret_type == "int")
+			type = Type::INT;
+		else if (ret_type == "float")
+			type = Type::FLOAT;
+		else if (ret_type == "bool")
+			type = Type::BOOL;
+		else {
+			error(get_token_position(), "Invlalid return type");
+			type = Type::VOID;
+		}
+
+		next_token();
+
+		return type;
+	} else
+		return Type::VOID;
 }
 
 std::unique_ptr<VariableDeclaration> Parser::parse_variable_declaration() {
-	return nullptr;
-}
-
-std::unique_ptr<Statement> Parser::parse_parameters() {
 	return nullptr;
 }
 

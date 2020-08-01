@@ -83,12 +83,13 @@ Token Tokenizer::scan_name() {
 }
 
 Token Tokenizer::scan_number() {
-	Token token(TokenKind::NAME);
+	Token token;
 	std::string lexeme;
 
 	while (std::isdigit(m_stream.current())) {
 		lexeme += m_stream.current();
 		m_stream.next();
+		token.set_type(TokenKind::INT);
 	}
 	
 	if (m_stream.current() == '.') {
@@ -101,6 +102,8 @@ Token Tokenizer::scan_number() {
 			lexeme += m_stream.current();
 			m_stream.next();
 		}
+
+		token.set_type(TokenKind::FLOAT);
 	}
 
 	token.set_lexeme(std::move(lexeme));
@@ -145,9 +148,13 @@ Token Tokenizer::scan_operator_or_punctuation_mark() {
 			token.set_type(TokenKind::PLUS);
 		break;
 	case '-':
-		if (m_stream.next() == '-') {
+		m_stream.next();
+		if (m_stream.current() == '-') {
 			m_stream.next();
 			token.set_type(TokenKind::MINUS_MINUS);
+		} else if (m_stream.current() == '>') {
+			m_stream.next();
+			token.set_type(TokenKind::ARROW);
 		} else
 			token.set_type(TokenKind::MINUS);
 		break;

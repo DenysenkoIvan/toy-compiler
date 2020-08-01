@@ -29,6 +29,7 @@ public:
 };
 
 enum class Type {
+	VOID = 0,
 	BOOL,
 	INT,
 	FLOAT
@@ -44,13 +45,18 @@ private:
 	std::unique_ptr<Expression> m_initial_value;
 };
 
+struct TypedId {
+	Type type;
+	std::string id;
+};
+
 class FunctionDeclaration final : public DeclarationStatement {
 public:
-	FunctionDeclaration(Type ret_type, std::string&& id, std::vector<std::unique_ptr<VariableDeclaration>>&& args, std::vector<std::unique_ptr<Statement>>&& stmts);
+	FunctionDeclaration(Type ret_type, std::string&& id, std::vector<TypedId>&& params, std::unique_ptr<CompoundStatement>&& stmt);
 
 private:
-	std::vector<std::unique_ptr<VariableDeclaration>> m_arguments;
-	std::vector<std::unique_ptr<Statement>> m_statements;
+	std::vector<TypedId> m_parameters;
+	std::unique_ptr<CompoundStatement> m_statement;
 	std::string m_id;
 	Type m_ret_type;
 };
