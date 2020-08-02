@@ -72,12 +72,13 @@ private:
 
 class ForStatement final : public Statement {
 public:
-	ForStatement(std::unique_ptr<VariableDeclaration> var_decl, std::unique_ptr<Expression> condition_expr, std::unique_ptr<Expression> loop_expr);
+	ForStatement(std::unique_ptr<VariableDeclaration> var_decl, std::unique_ptr<Expression> condition_expr, std::unique_ptr<Expression> loop_expr, std::unique_ptr<Statement> stmt);
 
 private:
 	std::unique_ptr<VariableDeclaration> m_variable_declaration;
 	std::unique_ptr<Expression> m_condition_expr;
 	std::unique_ptr<Expression> m_loop_expr;
+	std::unique_ptr<Statement> m_statement;
 };
 
 class WhileStatement final : public Statement {

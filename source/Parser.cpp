@@ -151,12 +151,8 @@ std::unique_ptr<DeclarationStatement> Parser::parse_declaration_statement() {
 }
 
 std::unique_ptr<FunctionDeclaration> Parser::parse_function_declaration() {
-	std::string id;
-	Type ret_type;
-	std::vector<TypedId> params;
-	std::unique_ptr<CompoundStatement> statement;
-
 	if (match_token("def")) {
+		std::string id;
 		if (is_token(TokenKind::NAME)) {
 			id = move(get_token_lexeme());
 			next_token();
@@ -166,14 +162,14 @@ std::unique_ptr<FunctionDeclaration> Parser::parse_function_declaration() {
 		if (!match_token(TokenKind::LEFT_PAREN))
 			error(get_token_position(), "Expected '('");
 
-		params = parse_parameters();
+		std::vector<TypedId> params = parse_parameters();
 
 		if (!match_token(TokenKind::RIGHT_PAREN))
 			error(get_token_position(), "Expected ')'");
 
-		ret_type = parse_return_type();
+		Type ret_type = parse_return_type();
 
-		statement = parse_compound_statement();
+		std::unique_ptr<CompoundStatement> statement = parse_compound_statement();
 		if (!statement)
 			error(get_token_position(), "Expected statements enclosed in '{', '}'");
 
@@ -275,7 +271,7 @@ std::unique_ptr<Expression> Parser::parse_init_value() {
 }
 
 std::unique_ptr<IfStatement> Parser::parse_if_statement() {
-	if (is_token(TokenKind::NAME) && get_token_lexeme() == "if") {
+	if (match_token("if")) {
 		next_token();
 
 		if (!match_token(TokenKind::LEFT_PAREN))
@@ -294,7 +290,32 @@ std::unique_ptr<IfStatement> Parser::parse_if_statement() {
 }
 
 std::unique_ptr<ForStatement> Parser::parse_for_statement() {
-	return nullptr;
+	if (match_token("for")) {
+		if (!match_token(TokenKind::LEFT_PAREN))
+			error(get_token_position(), "Expected '('");
+
+		std::unique_ptr<VariableDeclaration> var_decl = parse_variable_declaration();
+
+		if (!match_token(TokenKind::SEMICOLON))
+			error(get_token_position(), "Expected ';'");
+
+		std::unique_ptr<Expression> cond_expr = parse_conditional_expression();
+
+		if (!match_token(TokenKind::SEMICOLON))
+			error(get_token_position(), "Expected ';'");
+
+		std::unique_ptr<Expression> expr = parse_expression();
+
+		if (!match_token(TokenKind::RIGHT_PAREN))
+			error(get_token_position(), "Expected ')'");
+
+		std::unique_ptr<Statement> stmt = parse_statement();
+		if (!stmt)
+			error(get_token_position(), "Expected statement");
+
+		return std::make_unique<ForStatement>(std::move(var_decl), std::move(cond_expr), std::move(expr), std::move(stmt));
+	} else
+		return nullptr;
 }
 
 std::unique_ptr<WhileStatement> Parser::parse_while_statement() {

@@ -12,8 +12,8 @@ FunctionDeclaration::FunctionDeclaration(Type ret_type, std::string&& id, std::v
 IfStatement::IfStatement(std::unique_ptr<Expression> condition, std::unique_ptr<Statement> statement) :
 	m_condition(std::move(condition)), m_statement(std::move(statement)) {}
 
-ForStatement::ForStatement(std::unique_ptr<VariableDeclaration> var_decl, std::unique_ptr<Expression> condition_expr, std::unique_ptr<Expression> loop_expr) :
-		m_variable_declaration(std::move(var_decl)), m_condition_expr(std::move(condition_expr)), m_loop_expr(std::move(loop_expr)) {}
+ForStatement::ForStatement(std::unique_ptr<VariableDeclaration> var_decl, std::unique_ptr<Expression> condition_expr, std::unique_ptr<Expression> loop_expr, std::unique_ptr<Statement> stmt) :
+		m_variable_declaration(std::move(var_decl)), m_condition_expr(std::move(condition_expr)), m_loop_expr(std::move(loop_expr)), m_statement(std::move(stmt)) {}
 
 WhileStatement::WhileStatement(std::unique_ptr<Expression> condition_expr, std::unique_ptr<Statement> statement) :
 	m_condition_expr(std::move(condition_expr)), m_statement(std::move(statement)) {}

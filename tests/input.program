@@ -1,3 +1,7 @@
 def foo() -> bool {
 	int a;
+
+	for (;;) {
+		int b;
+	}
 }
