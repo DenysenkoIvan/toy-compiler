@@ -319,7 +319,24 @@ std::unique_ptr<ForStatement> Parser::parse_for_statement() {
 }
 
 std::unique_ptr<WhileStatement> Parser::parse_while_statement() {
-	return nullptr;
+	if (match_token("while")) {
+		if (!match_token(TokenKind::LEFT_PAREN))
+			error(get_token_position(), "Expected '('");
+
+		std::unique_ptr<Expression> cond_expr = parse_conditional_expression();
+		if (!cond_expr)
+			error(get_token_position(), "Expected conditional expression");
+
+		if (!match_token(TokenKind::RIGHT_PAREN))
+			error(get_token_position(), "Expected ')'");
+
+		std::unique_ptr<Statement> stmt = parse_statement();
+		if (!stmt)
+			error(get_token_position(), "Expected statement");
+
+		return std::make_unique<WhileStatement>(std::move(cond_expr), std::move(stmt));
+	} else
+		return nullptr;
 }
 
 std::unique_ptr<ReturnStatement> Parser::parse_return_statement() {
