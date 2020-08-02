@@ -33,6 +33,7 @@ private:
 	std::vector<TypedId> parse_parameters();
 	Type parse_return_type();
 	std::unique_ptr<VariableDeclaration> parse_variable_declaration();
+	std::unique_ptr<Expression> parse_init_value();
 	std::unique_ptr<IfStatement> parse_if_statement();
 	std::unique_ptr<ForStatement> parse_for_statement();
 	std::unique_ptr<WhileStatement> parse_while_statement();

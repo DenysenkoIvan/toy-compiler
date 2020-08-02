@@ -187,10 +187,11 @@ TypedId Parser::parse_typed_id() {
 	if (is_token(TokenKind::NAME)) {
 		TypedId typed_id;
 		typed_id.type = parse_type(get_token_lexeme());
-		next_token();
 
 		if (typed_id.type == Type::VOID)
 			return typed_id;
+
+		next_token();
 
 		if (!is_token(TokenKind::NAME)) {
 			error(get_token_position(), "Expected ID");
@@ -256,7 +257,21 @@ Type Parser::parse_return_type() {
 }
 
 std::unique_ptr<VariableDeclaration> Parser::parse_variable_declaration() {
-	return nullptr;
+	TypedId typed_id = parse_typed_id();
+
+	if (typed_id.type == Type::VOID)
+		return nullptr;
+
+	std::unique_ptr<Expression> init_expr = parse_init_value();
+	
+	return std::make_unique<VariableDeclaration>(typed_id.type, std::move(typed_id.id), std::move(init_expr));
+}
+
+std::unique_ptr<Expression> Parser::parse_init_value() {
+	if (match_token(TokenKind::EQUAL)) {
+		return parse_conditional_expression();
+	} else
+		return nullptr;
 }
 
 std::unique_ptr<IfStatement> Parser::parse_if_statement() {
