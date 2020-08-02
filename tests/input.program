@@ -4,4 +4,6 @@ def foo() -> bool {
 	for (;;) {
 		int b;
 	}
+
+	return;
 }

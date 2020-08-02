@@ -340,7 +340,15 @@ std::unique_ptr<WhileStatement> Parser::parse_while_statement() {
 }
 
 std::unique_ptr<ReturnStatement> Parser::parse_return_statement() {
-	return nullptr;
+	if (match_token("return")) {
+		std::unique_ptr<Expression> ret_expr = parse_conditional_expression();
+		
+		if (!match_token(TokenKind::SEMICOLON))
+			error(get_token_position(), "Expected ';'");
+
+		return std::make_unique<ReturnStatement>(std::move(ret_expr));
+	} else
+		return nullptr;
 }
 
 std::unique_ptr<Expression> Parser::parse_expression() {
