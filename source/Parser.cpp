@@ -107,11 +107,11 @@ std::unique_ptr<Statement> Parser::parse_statement() {
 }
 
 std::unique_ptr<CompoundStatement> Parser::parse_compound_statement() {
-	if (match_token(TokenKind::LEFT_BRACKET)) {
+	if (match_token(TokenKind::LEFT_BRACE)) {
 		std::vector<std::unique_ptr<Statement>> statements;
 
 		while (true) {
-			if (match_token(TokenKind::RIGHT_BRACKET))
+			if (match_token(TokenKind::RIGHT_BRACE))
 				return std::make_unique<CompoundStatement>(std::move(statements));
 			else if (match_token(TokenKind::EOS)) {
 				error(m_tokenizer.current().pos(), "Unexpected end of file");
@@ -275,6 +275,21 @@ std::unique_ptr<Expression> Parser::parse_init_value() {
 }
 
 std::unique_ptr<IfStatement> Parser::parse_if_statement() {
+	if (is_token(TokenKind::NAME) && get_token_lexeme() == "if") {
+		next_token();
+
+		if (!match_token(TokenKind::LEFT_PAREN))
+			error(get_token_position(), "Expected '('");
+
+		std::unique_ptr<Expression> cond_expr = parse_conditional_expression();
+		if (!cond_expr)
+			error(get_token_position(), "Expected conditional expression");
+
+		std::unique_ptr<Statement> stmt = parse_statement();
+
+		return std::make_unique<IfStatement>(std::move(cond_expr), std::move(stmt));
+	}
+
 	return nullptr;
 }
 

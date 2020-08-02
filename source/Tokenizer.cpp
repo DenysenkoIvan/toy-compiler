@@ -202,11 +202,11 @@ Token Tokenizer::scan_operator_or_punctuation_mark() {
 		break;
 	case '{':
 		m_stream.next();
-		token.set_type(TokenKind::LEFT_BRACKET);
+		token.set_type(TokenKind::LEFT_BRACE);
 		break;
 	case '}':
 		m_stream.next();
-		token.set_type(TokenKind::RIGHT_BRACKET);
+		token.set_type(TokenKind::RIGHT_BRACE);
 		break;
 	default:
 		token.set_type(TokenKind::INVALID);
