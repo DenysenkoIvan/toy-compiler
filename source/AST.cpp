@@ -27,6 +27,12 @@ BinaryExpression::BinaryExpression(BinaryOp op, std::unique_ptr<Expression> left
 UnaryExpression::UnaryExpression(UnaryOp op, std::unique_ptr<Expression> expr)
 	: m_op(op), m_expr(std::move(expr)) {}
 
+IdAtom::IdAtom(std::string&& id) :
+	m_id(std::move(id)) {}
+
+FuncCallAtom::FuncCallAtom(std::string&& id, std::vector<std::unique_ptr<Expression>>&& arguments) :
+	m_id(std::move(id)), m_arguments(std::move(arguments)) {}
+
 IntLiteral::IntLiteral(int integer) :
 	m_integer(integer) {}
 

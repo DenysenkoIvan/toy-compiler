@@ -139,7 +139,29 @@ private:
 	std::unique_ptr<Expression> m_expr;
 };
 
-class Literal : public Expression {
+class Atom : public Expression {
+public:
+	virtual ~Atom() {}
+};
+
+class IdAtom final : public Atom {
+public:
+	IdAtom(std::string&& id);
+
+private:
+	std::string m_id;
+};
+
+class FuncCallAtom final : public Atom {
+public:
+	FuncCallAtom(std::string&& id, std::vector<std::unique_ptr<Expression>>&& arguments);
+
+private:
+	std::string m_id;
+	std::vector<std::unique_ptr<Expression>> m_arguments;
+};
+
+class Literal : public Atom {
 public:
 	virtual ~Literal() {}
 };

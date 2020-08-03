@@ -85,12 +85,6 @@ std::unique_ptr<Statement> Parser::parse_statement() {
 	stmt = parse_compound_statement();
 	if (stmt) return stmt;
 
-	stmt = parse_expression_statement();
-	if (stmt) return stmt;
-
-	stmt = parse_declaration_statement();
-	if (stmt) return stmt;
-
 	stmt = parse_if_statement();
 	if (stmt) return stmt;
 
@@ -101,6 +95,12 @@ std::unique_ptr<Statement> Parser::parse_statement() {
 	if (stmt) return stmt;
 
 	stmt = parse_return_statement();
+	if (stmt) return stmt;
+
+	stmt = parse_declaration_statement();
+	if (stmt) return stmt;
+
+	stmt = parse_expression_statement();
 	if (stmt) return stmt;
 
 	return nullptr;
@@ -122,9 +122,8 @@ std::unique_ptr<CompoundStatement> Parser::parse_compound_statement() {
 		}
 
 		return std::make_unique<CompoundStatement>(std::move(statements));
-	}
-
-	return nullptr;
+	} else
+		return nullptr;
 }
 
 std::unique_ptr<Expression> Parser::parse_expression_statement() {
@@ -142,12 +141,16 @@ std::unique_ptr<Expression> Parser::parse_expression_statement() {
 }
 
 std::unique_ptr<DeclarationStatement> Parser::parse_declaration_statement() {
-	std::unique_ptr<VariableDeclaration> var_decl = parse_variable_declaration();
-	if (var_decl) {
-		match_token(TokenKind::SEMICOLON);
+	std::unique_ptr<FunctionDeclaration> func_decl = parse_function_declaration();
+	if (func_decl)
+		return func_decl;
+	else {
+		std::unique_ptr<VariableDeclaration> var_decl = parse_variable_declaration();
+		if (var_decl && !match_token(TokenKind::SEMICOLON))
+			error(get_token_position(), "Expected ';' after function declaration");
+
 		return var_decl;
-	} else
-		return parse_function_declaration();
+	}
 }
 
 std::unique_ptr<FunctionDeclaration> Parser::parse_function_declaration() {
@@ -272,8 +275,6 @@ std::unique_ptr<Expression> Parser::parse_init_value() {
 
 std::unique_ptr<IfStatement> Parser::parse_if_statement() {
 	if (match_token("if")) {
-		next_token();
-
 		if (!match_token(TokenKind::LEFT_PAREN))
 			error(get_token_position(), "Expected '('");
 
@@ -281,12 +282,14 @@ std::unique_ptr<IfStatement> Parser::parse_if_statement() {
 		if (!cond_expr)
 			error(get_token_position(), "Expected conditional expression");
 
+		if (!match_token(TokenKind::RIGHT_PAREN))
+			error(get_token_position(), "Expected ')' after if condition");
+
 		std::unique_ptr<Statement> stmt = parse_statement();
 
 		return std::make_unique<IfStatement>(std::move(cond_expr), std::move(stmt));
-	}
-
-	return nullptr;
+	} else
+		return nullptr;
 }
 
 std::unique_ptr<ForStatement> Parser::parse_for_statement() {
@@ -352,45 +355,204 @@ std::unique_ptr<ReturnStatement> Parser::parse_return_statement() {
 }
 
 std::unique_ptr<Expression> Parser::parse_expression() {
-	return nullptr;
+	std::unique_ptr<Expression> lhs = parse_conditional_expression();
+
+	if (match_token(TokenKind::COMA)) {
+		std::unique_ptr<Expression> rhs = parse_conditional_expression();
+		if (!rhs)
+			error(get_token_position(), "Expected another expression after ','");
+
+		return std::make_unique<BinaryExpression>(BinaryOp::COMA, std::move(lhs), std::move(rhs));
+	}
+	
+	return lhs;
 }
 
 std::unique_ptr<Expression> Parser::parse_conditional_expression() {
-	return nullptr;
+	return parse_logical_or_expression();
 }
 
 std::unique_ptr<Expression> Parser::parse_logical_or_expression() {
-	return nullptr;
+	std::unique_ptr<Expression> lhs = parse_logical_and_expression();
+
+	if (match_token(TokenKind::LOGICAL_OR)) {
+		std::unique_ptr<Expression> rhs = parse_logical_and_expression();
+		if (!rhs)
+			error(get_token_position(), "Expected another expression after '||'");
+
+		return std::make_unique<BinaryExpression>(BinaryOp::LOGICAL_OR, std::move(lhs), std::move(rhs));
+	}
+	
+	return lhs;
 }
 
 std::unique_ptr<Expression> Parser::parse_logical_and_expression() {
-	return nullptr;
+	std::unique_ptr<Expression> lhs = parse_equality_expression();
+
+	if (match_token(TokenKind::LOGICAL_AND)) {
+		std::unique_ptr<Expression> rhs = parse_equality_expression();
+		if (!rhs)
+			error(get_token_position(), "Expected another expression after '&&'");
+
+		return std::make_unique<BinaryExpression>(BinaryOp::LOGICAL_AND, std::move(lhs), std::move(rhs));
+	}
+	
+	return lhs;
 }
 
 std::unique_ptr<Expression> Parser::parse_equality_expression() {
-	return nullptr;
+	std::unique_ptr<Expression> lhs = parse_relational_expression();
+
+	if (match_token(TokenKind::EQUAL_EQUAL)) {
+		std::unique_ptr<Expression> rhs = parse_relational_expression();
+		if (!rhs)
+			error(get_token_position(), "Expected expression after equality operator '=='");
+
+		return std::make_unique<BinaryExpression>(BinaryOp::LOGICAL_EQUAL, std::move(lhs), std::move(rhs));
+	} else if (match_token(TokenKind::NOT_EQUAL)) {
+		std::unique_ptr<Expression> rhs = parse_relational_expression();
+		if (!rhs)
+			error(get_token_position(), "Expected expression after not equal operator '!='");
+
+		return std::make_unique<BinaryExpression>(BinaryOp::LOGICAL_NOT_EQUAL, std::move(lhs), std::move(rhs));
+	}
+	
+	return lhs;
 }
 
 std::unique_ptr<Expression> Parser::parse_relational_expression() {
-	return nullptr;
+	std::unique_ptr<Expression> lhs = parse_additive_expression();
+
+	if (match_token(TokenKind::LESS)) {
+		std::unique_ptr<Expression> rhs = parse_additive_expression();
+		if (!rhs)
+			error(get_token_position(), "Expected expression after less operator '<'");
+
+		return std::make_unique<BinaryExpression>(BinaryOp::LESS, std::move(lhs), std::move(rhs));
+	} else if (match_token(TokenKind::LESS_EQUAL)) {
+		std::unique_ptr<Expression> rhs = parse_additive_expression();
+		if (!rhs)
+			error(get_token_position(), "Expected expression after less equal operator '<='");
+
+		return std::make_unique<BinaryExpression>(BinaryOp::LESS_EQUAL, std::move(lhs), std::move(rhs));
+	} else if (match_token(TokenKind::GREATER)) {
+		std::unique_ptr<Expression> rhs = parse_additive_expression();
+		if (!rhs)
+			error(get_token_position(), "Expected expression after greater operator '>'");
+
+		return std::make_unique<BinaryExpression>(BinaryOp::GREATER, std::move(lhs), std::move(rhs));
+	} else if (match_token(TokenKind::GREATER_EQUAL)) {
+		std::unique_ptr<Expression> rhs = parse_additive_expression();
+		if (!rhs)
+			error(get_token_position(), "Expected expression after greater equal operator '>='");
+
+		return std::make_unique<BinaryExpression>(BinaryOp::GREATER_EQUAL, std::move(lhs), std::move(rhs));
+	}
+	
+	return lhs;
 }
 
 std::unique_ptr<Expression> Parser::parse_additive_expression() {
-	return nullptr;
+	std::unique_ptr<Expression> lhs = parse_multiplicative_expression();
+
+	if (match_token(TokenKind::PLUS)) {
+		std::unique_ptr<Expression> rhs = parse_multiplicative_expression();
+		if (!rhs)
+			error(get_token_position(), "Expected expression after plus operator '+'");
+
+		return std::make_unique<BinaryExpression>(BinaryOp::PLUS, std::move(lhs), std::move(rhs));
+	} else if (match_token(TokenKind::MINUS)) {
+		std::unique_ptr<Expression> rhs = parse_multiplicative_expression();
+		if (!rhs)
+			error(get_token_position(), "Expected expression after minus operator '-'");
+
+		return std::make_unique<BinaryExpression>(BinaryOp::MINUS, std::move(lhs), std::move(rhs));
+	}
+	
+	return lhs;
 }
 
 std::unique_ptr<Expression> Parser::parse_multiplicative_expression() {
-	return nullptr;
+	std::unique_ptr<Expression> lhs = parse_unary_expression();
+
+	if (match_token(TokenKind::STAR)) {
+		std::unique_ptr<Expression> rhs = parse_unary_expression();
+		if (!rhs)
+			error(get_token_position(), "Expected expression after multiply operator '*'");
+
+		return std::make_unique<BinaryExpression>(BinaryOp::MULTIPLY, std::move(lhs), std::move(rhs));
+	} else if (match_token(TokenKind::SLASH)) {
+		std::unique_ptr<Expression> rhs = parse_unary_expression();
+		if (!rhs)
+			error(get_token_position(), "Expected expression after divide operator '/'");
+
+		return std::make_unique<BinaryExpression>(BinaryOp::DIVIDE, std::move(lhs), std::move(rhs));
+	}
+	
+	return lhs;
 }
 
 std::unique_ptr<Expression> Parser::parse_unary_expression() {
-	return nullptr;
+	if (match_token(TokenKind::PLUS_PLUS)) {
+		return std::make_unique<UnaryExpression>(UnaryOp::PRE_INCREMENT, parse_atom());
+	} else if (match_token(TokenKind::MINUS_MINUS)) {
+		return std::make_unique<UnaryExpression>(UnaryOp::PRE_DECREMENT, parse_atom());
+	} else
+		return parse_atom();
 }
 
-std::unique_ptr<Expression> Parser::parse_primary_expression() {
-	return nullptr;
+std::unique_ptr<Expression> Parser::parse_atom() {
+	if (match_token("true")) {
+		return std::make_unique<BoolLiteral>(true);
+	} else if (match_token("false")) {
+		return std::make_unique<BoolLiteral>(false);
+	} else if (is_token(TokenKind::NAME)) {
+		std::string id = std::move(get_token_lexeme());
+		next_token();
+
+		if (match_token(TokenKind::LEFT_PAREN)) {
+			std::vector<std::unique_ptr<Expression>> args = parse_arguments();
+
+			if (!match_token(TokenKind::RIGHT_PAREN))
+				error(get_token_position(), "Expected ')' after function call arguments");
+
+			return std::make_unique<FuncCallAtom>(std::move(id), std::move(args));
+		} else
+			return std::make_unique<IdAtom>(std::move(id));
+	} else if (is_token(TokenKind::INT)) {
+		int number = std::stoi(get_token_lexeme());
+		next_token();
+
+		return std::make_unique<IntLiteral>(number);
+	} else if (is_token(TokenKind::FLOAT)) {
+		float number = std::stof(get_token_lexeme());
+		next_token();
+
+		return std::make_unique<FloatLiteral>(number);
+	} else
+		return nullptr;
 }
 
-std::unique_ptr<Expression> Parser::parse_literal() {
-	return nullptr;
+std::vector<std::unique_ptr<Expression>> Parser::parse_arguments() {
+	std::vector<std::unique_ptr<Expression>> args;
+
+	std::unique_ptr<Expression> cond_expr = parse_conditional_expression();
+	if (!cond_expr)
+		return {};
+
+	args.push_back(std::move(cond_expr));
+
+	while (match_token(TokenKind::COMA)) {
+		cond_expr = parse_conditional_expression();
+		if (!cond_expr)
+			return args;
+
+		args.push_back(std::move(cond_expr));
+	}
+
+	return args;
 }
+
+//std::unique_ptr<Expression> Parser::parse_literal() {
+//	return nullptr;
+//}

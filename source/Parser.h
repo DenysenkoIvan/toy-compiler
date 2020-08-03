@@ -48,8 +48,9 @@ private:
 	std::unique_ptr<Expression> parse_additive_expression();
 	std::unique_ptr<Expression> parse_multiplicative_expression();
 	std::unique_ptr<Expression> parse_unary_expression();
-	std::unique_ptr<Expression> parse_primary_expression();
-	std::unique_ptr<Expression> parse_literal();
+	std::unique_ptr<Expression> parse_atom();
+	std::vector<std::unique_ptr<Expression>> parse_arguments();
+	//std::unique_ptr<Expression> parse_literal();
 
 private:
 	Tokenizer m_tokenizer;
