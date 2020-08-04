@@ -1,16 +1,16 @@
-def foo() -> bool {
-	int a = 1;
+int a = 10;
 
-	for (int i = 0; i < 10; ++i) {
-		if (i == 7)
-			return true;
+def foo() -> bool {
+	int b = 10;
+	
+	for (int i = 0; i < a; ++i) {
+		b = b * 2;
 	}
 
-	int b = a + 10;
+	int c = b - 1;
 
-	//b = b * 2;
-
-	int b = a + 10 * 2;
-
-	return false;
+	if (c == 0)
+		return false;
+	
+	return true;
 }

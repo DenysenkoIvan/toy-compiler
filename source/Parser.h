@@ -40,6 +40,7 @@ private:
 	std::unique_ptr<ReturnStatement> parse_return_statement();
 
 	std::unique_ptr<Expression> parse_expression();
+	std::unique_ptr<Expression> parse_assignment_expression();
 	std::unique_ptr<Expression> parse_conditional_expression();
 	std::unique_ptr<Expression> parse_logical_or_expression();
 	std::unique_ptr<Expression> parse_logical_and_expression();

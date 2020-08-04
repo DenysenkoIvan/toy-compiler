@@ -12,7 +12,7 @@ public:
 
 class Expression : public Statement {
 public:
-	virtual ~Expression() {}
+	virtual ~Expression() = 0 {}
 };
 
 class CompoundStatement final : public Statement {
@@ -99,6 +99,7 @@ private:
 };
 
 enum class BinaryOp {
+	ASSIGN,
 	COMA,
 	LOGICAL_OR,
 	LOGICAL_AND,

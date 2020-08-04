@@ -135,7 +135,7 @@ std::unique_ptr<Expression> Parser::parse_expression_statement() {
 			error(m_tokenizer.current().pos(), "Expected ';'");
 	} else
 		if (semicolon)
-			return std::make_unique<Expression>();
+			error(get_token_position(), "Unexpected ';'");
 
 	return expr;
 }
@@ -355,16 +355,30 @@ std::unique_ptr<ReturnStatement> Parser::parse_return_statement() {
 }
 
 std::unique_ptr<Expression> Parser::parse_expression() {
-	std::unique_ptr<Expression> lhs = parse_conditional_expression();
+	std::unique_ptr<Expression> lhs = parse_assignment_expression();
 
 	if (match_token(TokenKind::COMA)) {
-		std::unique_ptr<Expression> rhs = parse_conditional_expression();
+		std::unique_ptr<Expression> rhs = parse_assignment_expression();
 		if (!rhs)
 			error(get_token_position(), "Expected another expression after ','");
 
 		return std::make_unique<BinaryExpression>(BinaryOp::COMA, std::move(lhs), std::move(rhs));
 	}
 	
+	return lhs;
+}
+
+std::unique_ptr<Expression> Parser::parse_assignment_expression() {
+	std::unique_ptr<Expression> lhs = parse_conditional_expression();
+
+	if (match_token(TokenKind::EQUAL)) {
+		std::unique_ptr<Expression> rhs = parse_conditional_expression();
+		if (!rhs)
+			error(get_token_position(), "Expected expression after assign operator '='");
+
+		return std::make_unique<BinaryExpression>(BinaryOp::ASSIGN, std::move(lhs), std::move(rhs));
+	}
+
 	return lhs;
 }
 
