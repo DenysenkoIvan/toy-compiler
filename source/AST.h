@@ -7,7 +7,7 @@
 
 class Statement {
 public:
-	virtual ~Statement() {};
+	virtual ~Statement() = 0 {};
 };
 
 class Expression : public Statement {
@@ -25,7 +25,7 @@ private:
 
 class DeclarationStatement : public Statement {
 public:
-	virtual ~DeclarationStatement() {}
+	virtual ~DeclarationStatement() = 0 {}
 };
 
 enum class Type {
@@ -142,7 +142,7 @@ private:
 
 class Atom : public Expression {
 public:
-	virtual ~Atom() {}
+	virtual ~Atom() = 0 {}
 };
 
 class IdAtom final : public Atom {
@@ -164,7 +164,7 @@ private:
 
 class Literal : public Atom {
 public:
-	virtual ~Literal() {}
+	virtual ~Literal() = 0 {}
 };
 
 class IntLiteral final : public Literal {

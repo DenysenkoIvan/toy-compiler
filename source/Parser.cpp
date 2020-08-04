@@ -65,7 +65,6 @@ std::unique_ptr<TranslationUnit> Parser::parse_translation_unit() {
 
 		if (!stmt) {
 			if (m_tokenizer.current().kind() != TokenKind::EOS) {
-				// TODO Error Messages
 				error(m_tokenizer.current().pos(), "Expected statement");
 				m_tokenizer.next();
 				continue;
@@ -566,7 +565,3 @@ std::vector<std::unique_ptr<Expression>> Parser::parse_arguments() {
 
 	return args;
 }
-
-//std::unique_ptr<Expression> Parser::parse_literal() {
-//	return nullptr;
-//}
