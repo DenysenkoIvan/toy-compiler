@@ -1,0 +1,139 @@
+translation-unit:
+	statement* EOS
+
+statement:
+	compound-statement
+	expression-statement
+	declaration-statement
+	if-statement
+	for-statement
+	while-statement
+	return-statement
+compound-statement:
+	'{' statement* '}'
+expression-statement:
+	expression ';'
+declaration-statement:
+	variable-declaration ';'
+	function-declaration
+variable-declaration:
+	typed-id init-value?
+typed-id:
+	type id
+init-value:
+	'=' conditional-expression
+function-declaration:
+	'def' id '(' parameters? ')' return-type? compound-statement
+parameters:
+	typed-id (',' typed-id)*
+return-type:
+	'->' type
+if-statement:
+	'if' '(' conditional-expression ')' statement
+for-statement:
+	'for' '(' variable-declaration? ';' conditional-expression? ';' expression? ')' statement
+while-statement:
+	'while' '(' conditional-expression ')' statement
+return-statement:
+	'return' conditional-expression? ';'
+
+expression:
+	assignment-expression
+	expression , assignment-expression
+assignment-expression:
+	conditional-expression ( '=' conditional-expression )?
+conditional-expression:
+	logical-or-expression
+logical-or-expression:
+	logical-and-expression
+	logical-or-expression '||' logical-and-expression
+logical-and-expression:
+	equality-expression
+	logical-and-expression '&&' equality-expression
+equality-expression:
+	relational-expression
+	equality-expression ('==' | '!=') relational-expression
+relational-expression:
+	additive-expression
+	relational-expression ('<' | '>' | '<=' | '>=') additive-expression
+additive-expression:
+	multiplicative-expression
+	additive-expression ('+' | '-') multiplicative-expression
+multiplicative-expression:
+	unary-expression
+	multiplicative-expression ('*' | '/') unary-expression
+unary-expression:
+	atom
+	'++' atom
+	'--' atom
+atom:
+	literal
+	id ( '(' arguments? ')' )?
+arguments:
+	conditional-expression ( ',' conditional-expression )*
+literal:
+	int-literal
+	float-literal
+	bool-literal
+
+
+int-literal:
+	digit+
+float-literal:
+	digit+ ( '.' digit+ )?
+bool-literal:
+	"true"
+	"false"
+id:
+	letter (letter | digit | '_')*
+letter:
+	'a'-'z'
+	'A'-'Z'
+digit:
+	'0'-'9'
+EOS:
+	EOF
+
+
+//
+/
+=
+==
+!=
+!
+++
++
+--
+-
+*
+<=
+<
+>=
+>
+{
+}
+&&
+||
+;
+(
+)
+->
+
+
+Parts of Grammar without left recursion:
+
+
+expression:
+	conditional-expression ( ',' conditional expression )?
+logical-or-expression:
+	logical-and-expression ( '||' logical-and-expression )?
+logical-and-expression:
+	equality-expression ( '&&' equality-expression )?
+equality-expression:
+	relational-expression ( ('==' | '!=') relational-expression )?
+relational-expression:
+	additive-expression ( ('<' | '>' | '<=' | '>=') additive-expression )?
+additive-expression:
+	multiplicative-expression ( ('+' | '-') multiplicative-expression )?
+multiplicative-expression:
+	unary-expression ( ('*' | '/') unary-expression )?
